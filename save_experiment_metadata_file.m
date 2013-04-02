@@ -1,5 +1,5 @@
-function [result,message] = save_metadata_file(save_location,metadata)
-    
+function [result,message] = save_experiment_metadata_file(save_location,metadata)
+% This function just saves a a variable and returns the sucess / failure
     result = 1;
     message = 'Metadata Saved';
     

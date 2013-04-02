@@ -1,5 +1,6 @@
 function [result,message,metadata] = display_experiment_metadata(protocol_folder)
-    
+% This just loads the metadata file, and displays it for double checking.
+
     result = 1;
     message = 'Metadata OK';
     

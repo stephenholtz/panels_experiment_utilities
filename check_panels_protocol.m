@@ -1,4 +1,9 @@
 function [result,msg,protocol_conditions] = check_panels_protocol(protocol_folder)
+% This function just loads in some conditions from a function that has them
+% as its output and makes sure the minimum number of fields exist in each
+% experimental condition. This avoids missed settings (i.e. position
+% function number etc.,)
+
     result = 1;    
     msg = 'Protocol OK';
 

@@ -1,4 +1,8 @@
 function run_panels_protocol(protocol_folder)
+% This runs a protocol, which consists of a function that returns a set of
+% conditions for the controller, a metadata file that has the experimental
+% conditions for record keeping, and a folder that has a copy of what is on
+% the SD card in the controller.
 
 %===Do some checks, and hardware initialization============================
 

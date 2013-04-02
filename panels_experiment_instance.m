@@ -1,5 +1,7 @@
 classdef panels_experiment_instance
-% experiment_settings
+% This just houses a few properties and functions that could also have
+% their own individual functions or script m files. All functions might be
+% rolled into this eventually...
 
     properties (Constant)
         % Number of repetitions of the experiment
