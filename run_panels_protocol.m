@@ -84,7 +84,8 @@ function run_panels_protocol(protocol_folder)
             while running || no_flight
                 running = check_is_on(timer_hand.Running);
                 if exp_instance.check_flight && trial_info.flight_stopped
-                    no_flight = 1;                    
+                    no_flight = 1;
+                    exp_instance.startle_animal(startle_channel);
                     stop(timer_hand)
                     set(timer_hand,'TasksToExecute',num_periods);
                     start(timer_hand);
