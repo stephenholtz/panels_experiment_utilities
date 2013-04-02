@@ -1,0 +1,156 @@
+function run_panels_protocol(protocol_folder)
+
+%===Do some checks, and hardware initialization============================
+
+    %check the protocol for all the required parts...
+    [result,message,protocol_conditions] = check_panels_protocol(protocol_folder);
+    handle_result(result,message);
+    %verify the experiment_metadata...
+    [result,message,experiment_metadata] = display_experiment_metadata(protocol_folder);
+    handle_result(result,message);
+    %'initialize' the experiment settings and hardware...
+    exp_instance = panels_experiment_instance;
+    experiment_metadata.exp_instance = exp_instance;
+    % make a folder for the experiment + experiment_metadata + data.daq...
+    experiment_metadata.orig_exp_loc = fullfile(exp_instance.storage_directory,experiment_metadata.Protocol,experiment_metadata.DateTime);
+    mkdir(experiment_metadata.orig_exp_loc);
+    % save the metadata now, in case the experiment crashes...
+    [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
+    handle_result(result,message);
+    % Create DAQ Channels if needed...
+    if exp_instance.record_flight || exp_instance.startle_for_flight;   
+        daqreset;
+    end
+    if exp_instance.record_flight;      
+        recording_channel  = exp_instance.initialize_recording_channel(experiment_metadata.orig_exp_loc);
+    end
+    if exp_instance.startle_for_flight; 
+        startle_channel    = exp_instance.initialize_startle_channel;
+    end
+    % Make an empty variable for the timer callback function...
+    if exp_instance.check_flight;        
+        flight_check_channel = exp_instance.initialize_flight_check_channel; 
+    else
+        flight_check_channel = [];
+    end
+    disp('Hardware OK')
+    
+%===Start the experiment===================================================
+
+    % Begin initial closed loop portion (add hard coded path of location
+    % for panels code)
+    addpath(genpath('C:\XmegaController_Matlab_V13')); 
+    send_panels_command(protocol_conditions.initial_alignment);
+    fprintf('Initial Alignment. Press any key to start experiment.\n')
+    pause()
+    % Start DAQ Channels
+    if exp_instance.record_flight;  start(recording_channel);   end
+    if exp_instance.check_flight;   start(flight_check_channel);end
+    % Set up timer function stuff
+    timer_fcn_period = .1;
+    trial_info = trialInfo; 
+    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, flight_check_channel});
+    check_is_on = @(str)(strcmpi('on',str));
+    % Create a variable to count the missed conditions for an alert email.
+    missed_condition_counter = 0;
+    
+    % Loop through the conditions, randomizing and repeating when/if necessary
+    for repetition = 1:exp_instance.num_repetitions
+        
+        rep_conditions_left = 1:numel(protocol_conditions.experiment);
+        if exp_instance.ramdomize_conditions
+            rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
+        end
+        
+        for current_condition = rep_conditions_left
+            
+            % Start with closed loop portion
+            num_periods = ceil(protocol_conditions.closed_loop.Duration/timer_fcn_period);
+            set(timer_hand,'TasksToExecute',num_periods);
+            
+            send_panels_command(protocol_conditions.closed_loop);
+            start(timer_hand);
+            Panel_com('start');
+            fprintf('Interpsersed Condition | PatternName: %s | Duration: %d\n',protocol_conditions.closed_loop.PatternName{1},protocol_conditions.closed_loop.Duration)
+            
+            running = check_is_on(timer_hand.Running);
+            no_flight = 0;
+            while running || no_flight
+                running = check_is_on(timer_hand.Running);
+                if exp_instance.check_flight && trial_info.flight_stopped
+                    no_flight = 1;                    
+                    stop(timer_hand)
+                    set(timer_hand,'TasksToExecute',num_periods);
+                    start(timer_hand);
+                elseif exp_instance.check_flight && ~trial_info.flight_stopped
+                    no_flight = 0;
+                end
+            end
+            Panel_com('stop');
+            
+            % Display the experimental stimulus
+            num_periods = ceil(protocol_conditions.experiment(current_condition).Duration/timer_fcn_period);
+            set(timer_hand,'TasksToExecute',num_periods);
+            
+            send_panels_command(protocol_conditions.experiment(current_condition));
+            start(timer_hand);
+            Panel_com('start');
+            [~,ind]=find(rep_conditions_left==current_condition);
+            fprintf('Experimental Condition | PatternName: %s | Duration: %d\n',protocol_conditions.experiment(current_condition).PatternName,protocol_conditions.experiment(current_condition).Duration)
+            fprintf('Rep %d of %d. Cond %d of %d\n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment));
+            
+            running = check_is_on(timer_hand.Running);
+            while running
+                running = check_is_on(timer_hand.Running);
+                if exp_instance.check_flight && trial_info.flight_stopped
+                    stop(timer_hand)
+                    running = 0;
+                    disp('Flight stopped!')
+                    
+                    if exp_instance.startle_for_flight
+                        exp_instance.startle_animal(startle_channel);
+                    end
+                    
+                    if exp_instance.repeat_missed_conditions
+                        missed_condition_counter = missed_condition_counter + 1;
+                        rep_conditions_left = [rep_conditions_left current_condition]; %#ok<*AGROW>
+                        rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
+                        if missed_condition_counter > 25
+                            [result,message] = send_alert_email('Experiment Failing!',{experiment_metadata.Arena,experiment_metadata.ExperimentName});
+                            handle_result(result,message);
+                        end
+                    end
+                end
+            end
+            Panel_com('stop');
+        end
+    end
+    
+%===End the experiment and clean up the hardware etc.,=====================
+
+    % End with another closed loop (not wing beat checked)
+    send_panels_command(protocol_conditions.closed_loop);
+    pause(protocol_conditions.closed_loop.Duration);
+    % Delete the timer
+    delete(timer_hand)
+    % Stop/Delete DAQ channels
+    if exp_instance.record_flight;      stop(recording_channel);    delete(recording_channel); end
+    if exp_instance.check_flight;       stop(flight_check_channel); delete(flight_check_channel);end
+    if exp_instance.startle_for_flight; delete(startle_channel);    end
+    %---update the experiment_metadata file as the experiment finishes
+    [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
+    handle_result(result,message);
+    %---copy the SC_card_contents to the experimental folder
+    [result,message] = copy_SD_card_contents_to_exp_dir(protocol_folder,experiment_metadata.orig_exp_loc);
+    handle_result(result,message);
+    %---end the experiment, send an alert email
+    [result,message] = send_alert_email('Experiment Complete!',{experiment_metadata.Arena,experiment_metadata.ExperimentName});
+    handle_result(result,message);
+	
+    function handle_result(result,message)
+    % Saves a few lines of code.
+        if ~result; error(message)
+        else        disp(message)
+        end
+    end
+end
