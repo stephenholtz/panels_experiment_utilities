@@ -15,6 +15,8 @@ function run_panels_protocol(protocol_folder)
     %'initialize' the experiment settings and hardware...
     exp_instance = panels_experiment_instance;
     experiment_metadata.exp_instance = exp_instance;
+    experiment_metadata.protocol_conditions = protocol_conditions;
+    
     % make a folder for the experiment + experiment_metadata + data.daq...
     experiment_metadata.orig_exp_loc = fullfile(exp_instance.storage_directory,experiment_metadata.Protocol,experiment_metadata.DateTime);
     mkdir(experiment_metadata.orig_exp_loc);
