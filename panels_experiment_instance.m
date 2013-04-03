@@ -48,25 +48,32 @@ classdef panels_experiment_instance
         
         function flight_check_channel = initialize_flight_check_channel()
             % The analog input for flight checking
-            flight_check_channel = analoginput('mcc',0);
+            try flight_check_channel = analoginput('nidaq','Dev2');
+            catch
+                flight_check_channel = analoginput('mcc',0);
+            end
             addchannel(flight_check_channel, 0);
-            set(flight_check_channel,'TriggerType','Immediate','SamplesPerTrigger',1,'ManualTriggerHwOn','Start')
+            set(flight_check_channel,'TriggerType','Immediate','SamplesPerTrigger',10,'ManualTriggerHwOn','Start')
         end
         
         function startle_channel = initialize_startle_channel()
             % The digital output for the startle trigger
-            startle_channel = digitalio('mcc',0);
+            try startle_channel = digitalio('nidaq','Dev2');
+            catch
+                startle_channel = digitalio('mcc',0);
+            end
+            
             addline(startle_channel,0,'Out');
         end
         
         function startle_animal(startle_channel)
             start(startle_channel)
             putvalue(startle_channel,1)
-            pause(.05)
+            pause(.1)
             putvalue(startle_channel,0) 
-            pause(.01)
+            pause(.1)
             putvalue(startle_channel,1)
-            pause(.075)
+            pause(.1)
             putvalue(startle_channel,0)
             stop(startle_channel)
         end
