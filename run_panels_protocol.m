@@ -46,6 +46,8 @@ function run_panels_protocol(protocol_folder)
     % Begin initial closed loop portion (add hard coded path of location
     % for panels code)
     addpath(genpath('C:\XmegaController_Matlab_V13')); 
+    Panel_com('set_config_id',protocol_conditions.initial_alignment.PanelCfgNum);
+    pause(5); % Setting the configuration takes a few seconds.
     send_panels_command(protocol_conditions.initial_alignment);
     fprintf('Initial Alignment. Press any key to start experiment.\n')
     pause()
