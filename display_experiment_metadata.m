@@ -28,7 +28,8 @@ function [result,message,metadata] = display_experiment_metadata(protocol_folder
     
     switch choice
         case {'n','N'}
-            message = 'Metadata Rejected';
+            message = ['Metadata Rejected: ' protocol_folder filesep 'experiment_metadata.m'];
+            result = 0;
         otherwise
             message = 'Metadata Accepted';
     end
