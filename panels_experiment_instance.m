@@ -32,7 +32,7 @@ classdef panels_experiment_instance
         function instance = experiment_settings()
         end
     end
-
+    
     methods
         function recording_channel = initialize_recording_channel(instance,experiment_dir)
             % The analog input device used as the data acquisition device
@@ -48,17 +48,17 @@ classdef panels_experiment_instance
         
         function flight_check_channel = initialize_flight_check_channel()
             % The analog input for flight checking
-            try flight_check_channel = analoginput('nidaq','Dev2');
-            catch
+            %try flight_check_channel = analoginput('nidaq','Dev2');
+            %catch
                 flight_check_channel = analoginput('mcc',0);
-            end
+            %end
             addchannel(flight_check_channel, 0);
             set(flight_check_channel,'TriggerType','Immediate','SamplesPerTrigger',10,'ManualTriggerHwOn','Start')
         end
         
         function startle_channel = initialize_startle_channel()
             % The digital output for the startle trigger
-            try startle_channel = digitalio('nidaq','Dev2');
+            try startle_channel = digitalio('nidaq','Dev1');
             catch
                 startle_channel = digitalio('mcc',0);
             end
@@ -67,17 +67,21 @@ classdef panels_experiment_instance
         end
         
         function startle_animal(startle_channel)
+            dur = .1;
+            pause(dur)
             start(startle_channel)
+            pause(dur)
             putvalue(startle_channel,1)
-            pause(.1)
-            putvalue(startle_channel,0) 
-            pause(.1)
-            putvalue(startle_channel,1)
-            pause(.1)
+            pause(dur)
             putvalue(startle_channel,0)
+            pause(dur)
+            putvalue(startle_channel,1)
+            pause(dur)
+            putvalue(startle_channel,0)
+            pause(dur)
             stop(startle_channel)
+            pause(dur)
         end
-        
     end
     
 end
