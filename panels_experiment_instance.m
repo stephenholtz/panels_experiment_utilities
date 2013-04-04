@@ -48,10 +48,10 @@ classdef panels_experiment_instance
         
         function flight_check_channel = initialize_flight_check_channel()
             % The analog input for flight checking
-            %try flight_check_channel = analoginput('nidaq','Dev2');
-            %catch
+            try flight_check_channel = analoginput('nidaq','Dev2');
+            catch
                 flight_check_channel = analoginput('mcc',0);
-            %end
+            end
             addchannel(flight_check_channel, 0);
             set(flight_check_channel,'TriggerType','Immediate','SamplesPerTrigger',10,'ManualTriggerHwOn','Start')
         end
