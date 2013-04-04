@@ -49,8 +49,10 @@ function run_panels_protocol(protocol_folder)
     Panel_com('set_config_id',protocol_conditions.initial_alignment.PanelCfgNum);
     pause(5); % Setting the configuration takes a few seconds.
     send_panels_command(protocol_conditions.initial_alignment);
+    Panel_com('start')
     fprintf('Initial Alignment. Press any key to start experiment.\n')
     pause()
+    Panel_com('stop')
     % Start DAQ Channels
     if exp_instance.record_flight;  start(recording_channel);   end
     if exp_instance.check_flight;   start(flight_check_channel);end
