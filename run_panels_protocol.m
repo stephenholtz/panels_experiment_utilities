@@ -83,7 +83,7 @@ function run_panels_protocol(protocol_folder)
             send_panels_command(protocol_conditions.closed_loop);
             start(timer_hand);
             Panel_com('start');
-            fprintf('Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.closed_loop.Duration,protocol_conditions.closed_loop.PatternName{1})
+            fprintf(' Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.closed_loop.Duration,protocol_conditions.closed_loop.PatternName{1})
             
             running = check_is_on(timer_hand.Running);
             no_flight = 0;
@@ -109,7 +109,7 @@ function run_panels_protocol(protocol_folder)
             start(timer_hand);
             Panel_com('start');
             [~,ind]=find(rep_conditions_left==current_condition);
-            fprintf('[Rep %d/%d] | [Cond %d/%d] | Duration: %d | PatternName: %.17s... \n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).PatternName,protocol_conditions.experiment(current_condition).Duration);
+            fprintf('[Rep %d/%d] | [Cond %d/%d] | Duration: %d | PatternName: %s... \n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).Duration,protocol_conditions.experiment(current_condition).PatternName(1:20));
             
             running = check_is_on(timer_hand.Running);
             while running
