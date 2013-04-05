@@ -6,19 +6,19 @@ function run_panels_protocol(protocol_folder)
 
 %===Do some checks, and hardware initialization============================
     
-    %check the protocol for all the required parts...
+    % check the protocol for all the required parts...
     [result,message,protocol_conditions] = check_panels_protocol(protocol_folder);
     handle_result(result,message);
-    %verify the experiment_metadata...
+    % verify the experiment_metadata...
     [result,message,experiment_metadata] = display_experiment_metadata(protocol_folder);
     handle_result(result,message);
-    %'initialize' the experiment settings and hardware...
+    % 'initialize' the experiment settings and hardware...
     exp_instance = panels_experiment_instance;
     experiment_metadata.exp_instance = exp_instance;
     experiment_metadata.protocol_conditions = protocol_conditions;
     
     % make a folder for the experiment + experiment_metadata + data.daq...
-    experiment_metadata.orig_exp_loc = fullfile(exp_instance.storage_directory,experiment_metadata.Protocol,experiment_metadata.Line,experiment_metadata.DateTime);
+    experiment_metadata.orig_exp_loc = fullfile(exp_instance.storage_directory,experiment_metadata.Protocol,[experiment_metadata.Line '_' experiment_metadata.Effector],experiment_metadata.DateTime);
     mkdir(experiment_metadata.orig_exp_loc);
     % save the metadata now, in case the experiment crashes...
     [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
@@ -53,6 +53,7 @@ function run_panels_protocol(protocol_folder)
     fprintf('Initial Alignment. Press any key to start experiment.\n')
     pause()
     Panel_com('stop')
+    
     % Start DAQ Channels
     if exp_instance.record_flight;  start(recording_channel);   end
     if exp_instance.check_flight;   start(flight_check_channel);end
@@ -82,7 +83,7 @@ function run_panels_protocol(protocol_folder)
             send_panels_command(protocol_conditions.closed_loop);
             start(timer_hand);
             Panel_com('start');
-            fprintf('Interpsersed Condition | PatternName: %s | Duration: %d\n',protocol_conditions.closed_loop.PatternName{1},protocol_conditions.closed_loop.Duration)
+            fprintf('Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.closed_loop.Duration,protocol_conditions.closed_loop.PatternName{1})
             
             running = check_is_on(timer_hand.Running);
             no_flight = 0;
@@ -108,7 +109,7 @@ function run_panels_protocol(protocol_folder)
             start(timer_hand);
             Panel_com('start');
             [~,ind]=find(rep_conditions_left==current_condition);
-            fprintf('[Rep %d/%d] | [Cond %d/4d] | Duration: %d | PatternName: %.17s...\n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).PatternName,protocol_conditions.experiment(current_condition).Duration);
+            fprintf('[Rep %d/%d] | [Cond %d/%d] | Duration: %d | PatternName: %.17s... \n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).PatternName,protocol_conditions.experiment(current_condition).Duration);
             
             running = check_is_on(timer_hand.Running);
             while running
@@ -148,15 +149,15 @@ function run_panels_protocol(protocol_folder)
     if exp_instance.record_flight;      stop(recording_channel);    delete(recording_channel); end
     if exp_instance.check_flight;       stop(flight_check_channel); delete(flight_check_channel);end
     if exp_instance.startle_for_flight; delete(startle_channel);    end
-    %---update the experiment_metadata file as the experiment finishes
+    % update the experiment_metadata file as the experiment finishes
     experiment_metadata.time_taken = toc(time_taken_hand);
     [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
     handle_result(result,message);
-    %---copy the SC_card_contents to the experimental folder
+    % copy the SC_card_contents to the experimental folder
     [result,message] = copy_SD_card_contents_to_exp_dir(protocol_folder,experiment_metadata.orig_exp_loc);
     handle_result(result,message);
-    %---end the experiment, send an alert email
-    [result,message] = send_alert_email('Experiment Complete!',{['Name: ' experiment_metadata.ExperimentName],['Arena: ' experiment_metadata.Arena],['Time :' num2str(experiment_metadata.time_taken/60) ' mins.']});
+    % end the experiment, send an alert email
+    [result,message] = send_alert_email('Experiment Complete!',{['Name: ' experiment_metadata.ExperimentName],['Arena: ' experiment_metadata.Arena],['Time: ' num2str(experiment_metadata.time_taken/60) ' mins.']});
     handle_result(result,message);
 	
     function handle_result(result,message)
