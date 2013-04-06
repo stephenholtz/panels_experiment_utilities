@@ -81,8 +81,8 @@ function run_panels_protocol(protocol_folder)
             set(timer_hand,'TasksToExecute',num_periods);
             
             send_panels_command(protocol_conditions.closed_loop);
+            Panel_com('start'); % This order matters! Flies don't like being put on stimulus hold
             start(timer_hand);
-            Panel_com('start');
             fprintf(' Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.closed_loop.Duration,protocol_conditions.closed_loop.PatternName{1})
             
             running = check_is_on(timer_hand.Running);
@@ -106,8 +106,8 @@ function run_panels_protocol(protocol_folder)
             set(timer_hand,'TasksToExecute',num_periods);
             
             send_panels_command(protocol_conditions.experiment(current_condition));
-            start(timer_hand);
             Panel_com('start');
+            start(timer_hand);
             [~,ind]=find(rep_conditions_left==current_condition);
             fprintf('[Rep %d/%d] | [Cond %d/%d] | Duration: %d | PatternName: %s... \n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).Duration,protocol_conditions.experiment(current_condition).PatternName(1:20));
             
