@@ -7,8 +7,8 @@ function updateTrialInfo(obj,event,trialInfo,monitor_channel)
 % if this callback updated them or not.
     if isobject(monitor_channel)
         start(monitor_channel);
-        freq = mean(getdata(monitor_channel));
-        if freq > 1;
+        freq = median(getdata(monitor_channel));
+        if freq > .5;
             trialInfo.flight_stopped = 0;
         else
             trialInfo.flight_stopped = 1;
