@@ -74,7 +74,8 @@ function run_panels_protocol(protocol_folder)
             rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
         end
         
-        for current_condition = rep_conditions_left
+        while ~isempty(rep_conditions_left)
+            current_condition = rep_conditions_left(1);
             
             % Start with closed loop portion
             num_periods = ceil(protocol_conditions.closed_loop.Duration/timer_fcn_period);
@@ -125,8 +126,10 @@ function run_panels_protocol(protocol_folder)
                     
                     if exp_instance.repeat_missed_conditions
                         missed_condition_counter = missed_condition_counter + 1;
-                        rep_conditions_left = [rep_conditions_left current_condition]; %#ok<*AGROW>
-                        rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
+                        rep_conditions_left = [current_condition rep_conditions_left ]; %#ok<*AGROW>
+                        if exp_instance.ramdomize_conditions
+                            rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
+                        end
                         if ~mod(missed_condition_counter,25)
                             [result,message] = send_alert_email('Experiment Failing!',{['Name: ' experiment_metadata.ExperimentName],['Arena: ' experiment_metadata.Arena],['Times Flight Stopped: ' num2str(missed_condition_counter)]});
                             handle_result(result,message);
@@ -134,6 +137,8 @@ function run_panels_protocol(protocol_folder)
                     end
                 end
             end
+            % Remove completed or failed condition from the list
+            rep_conditions_left = rep_conditions_left(2:end);
             Panel_com('stop');
         end
     end
