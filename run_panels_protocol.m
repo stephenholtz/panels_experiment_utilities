@@ -42,8 +42,7 @@ function run_panels_protocol(protocol_folder)
     
 %===Start the experiment===================================================
 
-    % Begin initial closed loop portion (add hard coded path of location
-    % for panels code)
+    % Begin initial closed loop portion (add hard coded path of location for panels code)
     addpath(genpath('C:\XmegaController_Matlab_V13')); 
     Panel_com('set_config_id',protocol_conditions.initial_alignment.PanelCfgNum);
     pause(5); % Setting the configuration takes a few seconds.
@@ -59,7 +58,6 @@ function run_panels_protocol(protocol_folder)
     timer_fcn_period = .1;
     trial_info = trialInfo; 
     timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, exp_instance.wbf_hw_index,wbf_cutoff});
-    %timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, flight_check_channel});
     check_is_on = @(str)(strcmpi('on',str));
     % Create a variable to count the missed conditions for an alert email.
     missed_condition_counter = 0;
@@ -165,7 +163,6 @@ function run_panels_protocol(protocol_folder)
     delete(timer_hand)
     % Stop/Delete DAQ channels
     if exp_instance.record_flight;      stop(data_recording_daq);    delete(data_recording_daq); end
-    %if exp_instance.check_flight;       stop(flight_check_channel); delete(flight_check_channel);end
     if exp_instance.startle_for_flight; delete(startle_channel);    end
     % update the experiment_metadata file as the experiment finishes
     experiment_metadata.time_taken = toc(time_taken_hand);
