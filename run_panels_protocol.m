@@ -27,17 +27,16 @@ function run_panels_protocol(protocol_folder)
     if exp_instance.record_flight || exp_instance.startle_for_flight;   
         daqreset;
     end
-    if exp_instance.record_flight;      
-        recording_channel  = exp_instance.initialize_recording_channel(experiment_metadata.orig_exp_loc);
+    if exp_instance.record_flight || exp_instance.check_flight
+        data_recording_daq  = exp_instance.initialize_data_recording_daq(experiment_metadata.orig_exp_loc);
     end
     if exp_instance.startle_for_flight;
         startle_channel    = exp_instance.initialize_startle_channel;
     end
-    % Make an empty variable for the timer callback function...
-    if exp_instance.check_flight;        
-        flight_check_channel = exp_instance.initialize_flight_check_channel; 
+    if exp_instance.check_flight
+         wbf_cutoff = 0;
     else
-        flight_check_channel = [];
+         wbf_cutoff = exp_instance.wbf_cutoff;
     end
     disp('Hardware OK')
     
@@ -55,12 +54,12 @@ function run_panels_protocol(protocol_folder)
     Panel_com('stop')
     
     % Start DAQ Channels
-    if exp_instance.record_flight;  start(recording_channel);   end
-    if exp_instance.check_flight;   start(flight_check_channel);end
+    if exp_instance.record_flight ||  exp_instance.check_flight;  start(data_recording_daq);   end
     % Set up timer function stuff
     timer_fcn_period = .1;
     trial_info = trialInfo; 
-    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, flight_check_channel});
+    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, exp_instance.wbf_hw_index,wbf_cutoff});
+    %timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, flight_check_channel});
     check_is_on = @(str)(strcmpi('on',str));
     % Create a variable to count the missed conditions for an alert email.
     missed_condition_counter = 0;
@@ -80,7 +79,6 @@ function run_panels_protocol(protocol_folder)
             % Start with closed loop portion
             num_periods = ceil(protocol_conditions.closed_loop.Duration/timer_fcn_period);
             set(timer_hand,'TasksToExecute',num_periods);
-            
             send_panels_command(protocol_conditions.closed_loop);
             Panel_com('start'); % This order matters! Flies don't like being put on stimulus hold
             start(timer_hand);
@@ -92,7 +90,9 @@ function run_panels_protocol(protocol_folder)
                 running = check_is_on(timer_hand.Running);
                 if exp_instance.check_flight && trial_info.flight_stopped
                     no_flight = 1;
-                    exp_instance.startle_animal(startle_channel);
+                    if exp_instance.startle_for_flight
+                        exp_instance.startle_animal(startle_channel);
+                    end
                     stop(timer_hand)
                     set(timer_hand,'TasksToExecute',num_periods);
                     start(timer_hand);
@@ -108,10 +108,23 @@ function run_panels_protocol(protocol_folder)
             
             send_panels_command(protocol_conditions.experiment(current_condition));
             Panel_com('start');
-            start(timer_hand);
-            [~,ind]=find(rep_conditions_left==current_condition);
-            fprintf('[Rep %d/%d] | [Cond %d/%d] | Duration: %d | PatternName: %s... \n',repetition,exp_instance.num_repetitions,ind,numel(protocol_conditions.experiment),protocol_conditions.experiment(current_condition).Duration,protocol_conditions.experiment(current_condition).PatternName(1:20));
             
+            % Sees if the voltage encoding channel is nonzero (i.e. stim has started)
+            stim_display_tic = tic;
+            peeked_data = peekdata(data_recording_daq,10);
+            peeked_data = mean(peeked_data(:,exp_instance.volt_encoding_hw_ind));
+            while peeked_data < exp_instance.min_volt_encoded_signal
+                peeked_data = peekdata(data_recording_daq,10);
+                peeked_data = mean(peeked_data(:,exp_instance.volt_encoding_hw_ind));                
+                if toc(stim_display_tic) > 5
+                    daqreset;
+                    error('Stimulus failed to display for 5 seconds.');
+                end
+            end
+            
+            start(timer_hand);
+            fprintf('[Rep %d/%d] | [Cond %d] | Duration: %d | PatternName: %s... \n',repetition,exp_instance.num_repetitions,current_condition,protocol_conditions.experiment(current_condition).Duration,protocol_conditions.experiment(current_condition).PatternName(1:20));
+
             running = check_is_on(timer_hand.Running);
             while running
                 running = check_is_on(timer_hand.Running);
@@ -151,8 +164,8 @@ function run_panels_protocol(protocol_folder)
     % Delete the timer
     delete(timer_hand)
     % Stop/Delete DAQ channels
-    if exp_instance.record_flight;      stop(recording_channel);    delete(recording_channel); end
-    if exp_instance.check_flight;       stop(flight_check_channel); delete(flight_check_channel);end
+    if exp_instance.record_flight;      stop(data_recording_daq);    delete(data_recording_daq); end
+    %if exp_instance.check_flight;       stop(flight_check_channel); delete(flight_check_channel);end
     if exp_instance.startle_for_flight; delete(startle_channel);    end
     % update the experiment_metadata file as the experiment finishes
     experiment_metadata.time_taken = toc(time_taken_hand);
