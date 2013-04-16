@@ -33,7 +33,7 @@ function run_panels_protocol(protocol_folder)
     if exp_instance.startle_for_flight;
         startle_channel    = exp_instance.initialize_startle_channel;
     end
-    if exp_instance.check_flight
+    if ~exp_instance.check_flight
          wbf_cutoff = 0;
     else
          wbf_cutoff = exp_instance.wbf_cutoff;

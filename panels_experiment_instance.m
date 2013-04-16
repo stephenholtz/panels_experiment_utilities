@@ -35,7 +35,7 @@ classdef panels_experiment_instance
     methods
         % This function will return all of the settings and is used in
         % running the experimental protocols
-        function instance = experiment_settings(~)
+        function instance = experiment_settings(~) %#ok<*STOUT>
         end
     end
     
@@ -57,19 +57,13 @@ classdef panels_experiment_instance
         
         function startle_animal(~,startle_channel)
             dur = .075;
-            pause(dur)
-            start(startle_channel)
-            pause(dur)
-            putvalue(startle_channel,1)
-            pause(dur)
-            putvalue(startle_channel,0)
-            pause(dur)
-            putvalue(startle_channel,1)
-            pause(dur)
-            putvalue(startle_channel,0)
-            pause(dur)
-            stop(startle_channel)
-            pause(dur)
+            pause(dur); start(startle_channel)
+            pause(dur); putvalue(startle_channel,1)
+            pause(dur); putvalue(startle_channel,0)
+            pause(dur); putvalue(startle_channel,1)
+            pause(dur); putvalue(startle_channel,0)
+            pause(dur); stop(startle_channel)
+            pause(dur); pause(dur)
         end
     end
     

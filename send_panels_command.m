@@ -91,7 +91,8 @@ function [gain,bias] = get_valid_gain_bias_vals(fps)
             for bias = range_bias
                 if(gain + 2.5*bias) == ideal_fps
                     found = true;
-                    gain = gain*sign(fps);
+                    gain = gain*sign(fps); %#ok<*FXSET>
+                    bias = bias*sign(fps);
                     return
                 end
             end
