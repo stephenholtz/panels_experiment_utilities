@@ -7,16 +7,16 @@ classdef panels_experiment_instance
         % Number of repetitions of the experiment
         num_repetitions = 3;
         % Randomize the experiment stimuli within each repetition
-        ramdomize_conditions = 0;
+        ramdomize_conditions = 1;
         % Record the wing beats
         record_flight = 1;
         % Check if the fly is flying during the experiment
-        check_flight = 0;
+        check_flight = 1;
         % Startle the fly if it is not flying (function to do so below),
         % depends on check_flight being on
-        startle_for_flight = 0;
+        startle_for_flight = 1;
         % Minimum wing beat frequency signal to trigger a failed stimulus
-        wbf_cutoff = -100;%.8;
+        wbf_cutoff = .8;
         wbf_hw_index = 3;
         % Repeat conditions that are missed due to no flight, depends on
         % check_flight being on
@@ -35,7 +35,7 @@ classdef panels_experiment_instance
     methods
         % This function will return all of the settings and is used in
         % running the experimental protocols
-        function instance = experiment_settings(~)
+        function instance = experiment_settings(~) %#ok<*STOUT>
         end
     end
     
@@ -57,19 +57,13 @@ classdef panels_experiment_instance
         
         function startle_animal(~,startle_channel)
             dur = .075;
-            pause(dur)
-            start(startle_channel)
-            pause(dur)
-            putvalue(startle_channel,1)
-            pause(dur)
-            putvalue(startle_channel,0)
-            pause(dur)
-            putvalue(startle_channel,1)
-            pause(dur)
-            putvalue(startle_channel,0)
-            pause(dur)
-            stop(startle_channel)
-            pause(dur)
+            pause(dur); start(startle_channel)
+            pause(dur); putvalue(startle_channel,1)
+            pause(dur); putvalue(startle_channel,0)
+            pause(dur); putvalue(startle_channel,1)
+            pause(dur); putvalue(startle_channel,0)
+            pause(dur); stop(startle_channel)
+            pause(dur); pause(dur)
         end
     end
     
