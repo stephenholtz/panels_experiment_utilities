@@ -10,16 +10,20 @@ function [time, voltage] = send_panels_command(cond_struct)
         Panel_com('load_pattern_2panels',cond_struct.PatternID);
         pause(.05) % Takes a bit of time to load the pattern
         Panel_com('set_position',cond_struct.InitialPosition);
-        pause(.05) % For some reason this also takes some time
+        pause(.03)
         Panel_com('set_mode',cond_struct.Mode);
-        pause(.05)
+        pause(.03)
         Panel_com('send_gain_bias',cond_struct.Gains);
-        pause(.05)
-        % For now leave this out, need to reconvene with Jin - 12/12
-        %Panel_com('set_posfunc_id',cond_struct.PosFunctionY);
-        %Panel_com('set_posfunc_id',cond_struct.PosFunctionX);
-        %Panel_com('set_funcy_freq',cond_struct.FuncFreqY);
-        %Panel_com('set_funcx_freq',cond_struct.FuncFreqX);
+        pause(.03)
+        Panel_com('set_funcy_freq',cond_struct.FuncFreqY);
+        pause(.03)
+        Panel_com('set_posfunc_id',cond_struct.PosFunctionY);
+        pause(.03)
+        Panel_com('set_funcx_freq',cond_struct.FuncFreqX);
+        pause(.03)
+        Panel_com('set_posfunc_id',cond_struct.PosFunctionX);
+        pause(.03)
+
     else
         Panel_com('set_pattern_id',cond_struct.PatternID);
         pause(.03)
@@ -46,32 +50,9 @@ function [time, voltage] = send_panels_command(cond_struct)
         pause(.03)
         Panel_com('set_posfunc_id',cond_struct.PosFunctionX);
         pause(.03)
-
-%        % Some new issues 12/12, need to meet with Jin
-%         if cond_struct.PosFunctionY(2)
-%             Panel_com('set_posfunc_id',cond_struct.PosFunctionY);
-%             pause(.05)
-%         end
-% 
-%         if cond_struct.PosFunctionX(2)
-%             Panel_com('set_posfunc_id',cond_struct.PosFunctionX);
-%             pause(.05)
-%         end
-% 
-%         if cond_struct.PosFunctionY(2)
-%             Panel_com('set_funcy_freq',cond_struct.FuncFreqY);
-%             pause(.05)
-%         end
-% 
-%         if cond_struct.PosFunctionX(2)
-%             Panel_com('set_funcx_freq',cond_struct.FuncFreqX);
-%             pause(.05)
-%         end
-
     end
     
     Panel_com('set_ao',[3,cond_struct.Voltage*(32767/10)]);
-%    Panel_com('set_ao',[4,0]); % trigger for precise timing of stim onset
     
     time = cond_struct.Duration;
     voltage = cond_struct.Voltage;
