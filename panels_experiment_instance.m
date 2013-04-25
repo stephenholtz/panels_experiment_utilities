@@ -7,14 +7,14 @@ classdef panels_experiment_instance
         % Number of repetitions of the experiment
         num_repetitions = 2;
         % Randomize the experiment stimuli within each repetition
-        ramdomize_conditions = 0;
+        ramdomize_conditions = 1;
         % Record the wing beats
         record_flight = 1;
         % Check if the fly is flying during the experiment
-        check_flight = 0;
+        check_flight = 1;
         % Startle the fly if it is not flying (function to do so below),
         % depends on check_flight being on
-        startle_for_flight = 0;
+        startle_for_flight = 1;
         % Minimum wing beat frequency signal to trigger a failed stimulus
         wbf_cutoff = .8;
         wbf_hw_index = 3;
@@ -29,7 +29,7 @@ classdef panels_experiment_instance
         % The directory where all of the data is stored
         storage_directory = 'C:\tf_tmpfs\';
         % Recorded data sampling rate
-        aquisition_sampling_rate = 10000;
+        aquisition_sampling_rate = 1000;
     end
     
     methods
@@ -56,14 +56,13 @@ classdef panels_experiment_instance
         end
         
         function startle_animal(~,startle_channel)
-            dur = .075;
-            pause(dur); start(startle_channel)
-            pause(dur); putvalue(startle_channel,1)
-            pause(dur); putvalue(startle_channel,0)
-            pause(dur); putvalue(startle_channel,1)
-            pause(dur); putvalue(startle_channel,0)
-            pause(dur); stop(startle_channel)
-            pause(dur); pause(dur)
+            dur = .5;
+            start(startle_channel)
+            putvalue(startle_channel,1)
+            pause(dur) 
+            putvalue(startle_channel,0)
+            stop(startle_channel)
+            pause(dur)
         end
     end
     
