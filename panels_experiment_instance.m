@@ -4,6 +4,8 @@ classdef panels_experiment_instance
 % rolled into this eventually...
 
     properties (Constant)
+        % Display the wba in a low resource plot
+        display_wba = 1;
         % Number of repetitions of the experiment
         num_repetitions = 2;
         % Randomize the experiment stimuli within each repetition
@@ -18,6 +20,9 @@ classdef panels_experiment_instance
         % Minimum wing beat frequency signal to trigger a failed stimulus
         wbf_cutoff = .8;
         wbf_hw_index = 3;
+        % The left and right wing beat amplitude hw channels
+        l_hw_index = 1;
+        r_hw_index = 2;
         % Repeat conditions that are missed due to no flight, depends on
         % check_flight being on
         repeat_missed_conditions = 1;
