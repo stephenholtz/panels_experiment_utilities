@@ -1,4 +1,4 @@
-classdef trialInfo < handle
+classdef TrialInfo < handle
     % This class is useful because its fields can be set by a callback
     % function, whereas with timers this is not possible using regular
     % variables.

@@ -34,10 +34,11 @@ function run_panels_protocol(protocol_folder)
         startle_channel    = exp_instance.initialize_startle_channel;
     end
     if ~exp_instance.check_flight
-         wbf_cutoff = 0;
+         wbf_cutoff = NaN;
     else
          wbf_cutoff = exp_instance.wbf_cutoff;
     end
+    
     disp('Hardware OK')
     
 %===Start the experiment===================================================
@@ -58,8 +59,15 @@ function run_panels_protocol(protocol_folder)
     timer_fcn_period = .1;
     samples_to_monitor = (timer_fcn_period*exp_instance.aquisition_sampling_rate);
     trial_info = trialInfo;
-    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate','StartFcn',{@resetTrialInfo},'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, samples_to_monitor,exp_instance.wbf_hw_index,wbf_cutoff,exp_instance.l_hw_index,exp_instance.r_hw_index});
+    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate',...
+        'StartFcn',{@resetTrialInfo},... All of the arguments are passed after the function in the brackets
+        'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, samples_to_monitor,exp_instance.wbf_hw_index,wbf_cutoff,exp_instance.l_hw_index,exp_instance.r_hw_index});
     check_is_on = @(str)(strcmpi('on',str));
+    % Display a figure if wanted
+    if exp_instance.display_wba
+        % Display the chunks of data
+        wba_display(timer_fcn_period,TrialInfo);
+    end
     % Create a variable to count the missed conditions for an alert email.
     missed_condition_counter = 0;
     time_taken_hand = tic;
