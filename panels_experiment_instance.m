@@ -13,7 +13,7 @@ classdef panels_experiment_instance
         % Record the wing beats
         record_flight = 1;
         % Check if the fly is flying during the experiment
-        check_flight = 1;
+        check_flight = 0;
         % Startle the fly if it is not flying (function to do so below),
         % depends on check_flight being on
         startle_for_flight = 1;

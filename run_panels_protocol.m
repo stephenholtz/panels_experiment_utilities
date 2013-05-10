@@ -43,6 +43,23 @@ function run_panels_protocol(protocol_folder)
     
 %===Start the experiment===================================================
 
+    % Start DAQ Channels
+    if exp_instance.record_flight ||  exp_instance.check_flight;  start(data_recording_daq);   end
+    % Set up timer function stuff (the callback fcn has comments)
+    timer_fcn_period = .1;
+    samples_to_monitor = (timer_fcn_period*exp_instance.aquisition_sampling_rate);
+    trial_info = TrialInfo;
+    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate',...
+        'StartFcn',{@resetTrialInfo},... All of the arguments are passed after the function in the brackets
+        'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, samples_to_monitor,exp_instance.wbf_hw_index,wbf_cutoff,exp_instance.l_hw_index,exp_instance.r_hw_index});
+    check_is_on = @(str)(strcmpi('on',str));
+
+    % Display a figure if wanted
+    if exp_instance.display_wba
+        % Display the chunks of data
+        wba_display(timer_fcn_period,TrialInfo);
+    end
+
     % Begin initial closed loop portion (add hard coded path of location for panels code)
     addpath(genpath('C:\XmegaController_Matlab_V13')); 
     Panel_com('set_config_id',protocol_conditions.initial_alignment.PanelCfgNum);
@@ -53,21 +70,6 @@ function run_panels_protocol(protocol_folder)
     pause()
     Panel_com('stop')
     
-    % Start DAQ Channels
-    if exp_instance.record_flight ||  exp_instance.check_flight;  start(data_recording_daq);   end
-    % Set up timer function stuff (the callback fcn has comments)
-    timer_fcn_period = .1;
-    samples_to_monitor = (timer_fcn_period*exp_instance.aquisition_sampling_rate);
-    trial_info = trialInfo;
-    timer_hand = timer('BusyMode','queue','Period',timer_fcn_period,'ExecutionMode','FixedRate',...
-        'StartFcn',{@resetTrialInfo},... All of the arguments are passed after the function in the brackets
-        'TimerFcn',{@updateTrialInfo, trial_info, data_recording_daq, samples_to_monitor,exp_instance.wbf_hw_index,wbf_cutoff,exp_instance.l_hw_index,exp_instance.r_hw_index});
-    check_is_on = @(str)(strcmpi('on',str));
-    % Display a figure if wanted
-    if exp_instance.display_wba
-        % Display the chunks of data
-        wba_display(timer_fcn_period,TrialInfo);
-    end
     % Create a variable to count the missed conditions for an alert email.
     missed_condition_counter = 0;
     time_taken_hand = tic;
