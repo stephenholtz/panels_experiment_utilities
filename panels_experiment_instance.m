@@ -13,12 +13,12 @@ classdef panels_experiment_instance
         % Record the wing beats
         record_flight = 1;
         % Check if the fly is flying during the experiment
-        check_flight = 0;
+        check_flight = 1;
         % Startle the fly if it is not flying (function to do so below),
         % depends on check_flight being on
         startle_for_flight = 1;
         % Minimum wing beat frequency signal to trigger a failed stimulus
-        wbf_cutoff = .8;
+        wbf_cutoff = .5;
         wbf_hw_index = 3;
         % The left and right wing beat amplitude hw channels
         l_hw_index = 1;
@@ -61,7 +61,7 @@ classdef panels_experiment_instance
         end
         
         function startle_animal(~,startle_channel)
-            dur = .5;
+            dur = .35;
             start(startle_channel)
             putvalue(startle_channel,1)
             pause(dur) 
