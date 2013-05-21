@@ -86,12 +86,12 @@ function run_panels_protocol(protocol_folder)
             current_condition = rep_conditions_left(1);
             
             % Start with closed loop portion
-            num_periods = ceil(protocol_conditions.closed_loop.Duration/timer_fcn_period);
+            num_periods = ceil(protocol_conditions.interspersal.Duration/timer_fcn_period);
             set(timer_hand,'TasksToExecute',num_periods);
-            send_panels_command(protocol_conditions.closed_loop);
+            send_panels_command(protocol_conditions.interspersal);
             Panel_com('start'); % This order matters! Flies don't like being put on stimulus hold
             start(timer_hand);
-            fprintf(' Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.closed_loop.Duration,protocol_conditions.closed_loop.PatternName{1})
+            fprintf(' Interpsersed Condition | Duration: %d | PatternName: %s\n',protocol_conditions.interspersal.Duration,protocol_conditions.interspersal.PatternName{1})
             
             running = check_is_on(timer_hand.Running);
             no_flight = 0;
@@ -168,8 +168,8 @@ function run_panels_protocol(protocol_folder)
 %===End the experiment and clean up the hardware etc.,=====================
 
     % End with another closed loop (not wing beat checked)
-    send_panels_command(protocol_conditions.closed_loop);
-    pause(protocol_conditions.closed_loop.Duration);
+    send_panels_command(protocol_conditions.interspersal);
+    pause(protocol_conditions.interspersal.Duration);
     % Delete the timer
     delete(timer_hand)
     % Stop/Delete DAQ channels
