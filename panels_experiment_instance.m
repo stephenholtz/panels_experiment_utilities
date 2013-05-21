@@ -5,7 +5,7 @@ classdef panels_experiment_instance
 
     properties (Constant)
         % Display the wba in a low resource plot
-        display_wba = 1;
+        display_wba = 0;
         % Number of repetitions of the experiment
         num_repetitions = 2;
         % Randomize the experiment stimuli within each repetition
@@ -13,7 +13,7 @@ classdef panels_experiment_instance
         % Record the wing beats
         record_flight = 1;
         % Check if the fly is flying during the experiment
-        check_flight = 1;
+        check_flight = 0;
         % Startle the fly if it is not flying (function to do so below),
         % depends on check_flight being on
         startle_for_flight = 1;

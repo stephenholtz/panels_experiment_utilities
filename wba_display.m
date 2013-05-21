@@ -1,4 +1,4 @@
-function wba_display2(update_period,TrialInfo,varargin)
+function wba_display(update_period,TrialInfo,varargin)
 % WBA_DISPLAY code for a very quick and dirty wba_display
 
 % Settings for the figure
@@ -52,7 +52,7 @@ set(fHand,'Visible','on')
         
         if ishandle(fHand)
             refreshdata(fHand,'caller')
-            disp(TrialInfo.lmr_wba)
+            %disp(TrialInfo.lmr_wba)
         else
             stop(obj)
             delete(obj)

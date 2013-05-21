@@ -11,10 +11,10 @@ function [result,msg,protocol_conditions] = check_panels_protocol(protocol_folde
     run(fullfile(protocol_folder,[protocol_name '.m']));
     protocol_conditions = ans; %#ok<*NOANS>
     
-    if isfield(protocol_conditions,'experiment') && isfield(protocol_conditions,'closed_loop') && isfield(protocol_conditions,'initial_alignment')
+    if isfield(protocol_conditions,'experiment') && isfield(protocol_conditions,'interspersal') && isfield(protocol_conditions,'initial_alignment')
     else
         result = 0;
-        msg = 'Missing a top level field, should have: ''.experiment'', ''.closed_loop'', ''.initial_alignment''';
+        msg = 'Missing a top level field, should have: ''.experiment'', ''.interspersal'', ''.initial_alignment''';
         return
     end
 
@@ -43,8 +43,8 @@ function [result,msg,protocol_conditions] = check_panels_protocol(protocol_folde
             end
         end
         
-        for i = 1:numel(protocol_conditions.closed_loop)
-            if ~isfield(protocol_conditions.closed_loop(i),f)
+        for i = 1:numel(protocol_conditions.interspersal)
+            if ~isfield(protocol_conditions.interspersal(i),f)
                 result = 0;
                 msg = ['Missing a panel command field: protocol_conditions.closed_loop(' num2str(i) ').' f];
                 return                
