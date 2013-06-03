@@ -11,7 +11,7 @@ function run_imaging_panels_protocol(protocol_folder)
     % Number of repetitions
     num_repetitions = 4;
     % Randomize conditions
-    randomize = 1;
+    randomize_conditions = 1;
     % Storage location
     storage_directory = 'C:\imaging_tmpfs'; 
 
@@ -38,14 +38,15 @@ function run_imaging_panels_protocol(protocol_folder)
     % Add digital out for triggering prairie view
     S_DO=daq.createSession('ni');
     S_DO.addDigitalChannel('Dev1','port0/line0','OutputOnly');
-    S_DO.outputSingleScan([0]);
+    S_DO.outputSingleScan(0);
     disp('Hardware ON')
 
 %===Start the experiment===================================================
     % Begin initial closed loop portion (add hard coded path of location for panels code)
     addpath(genpath('C:\XmegaController_Matlab_V13')); 
+    PControl; pause(5);
     Panel_com('set_config_id',protocol_conditions.initial_alignment.PanelCfgNum);
-    pause(5); % Setting the configuration takes a few seconds.
+    pause(3); % Setting the configuration takes a few seconds.
     send_panels_command(protocol_conditions.initial_alignment);
     Panel_com('start')
     fprintf('Initial Alignment. Press any key to start experiment.\n')
@@ -53,15 +54,12 @@ function run_imaging_panels_protocol(protocol_folder)
     Panel_com('stop')
 
     % Create a variable to count the missed conditions for an alert email.
-    missed_condition_counter = 0;
     time_taken_hand = tic;
-
-    total_conds = num_repetitions*numel(protocol_conditions.experiment);
     % Loop through the conditions, randomizing and repeating when/if necessary
     for repetition = 1:num_repetitions
 
         rep_conditions_left = 1:numel(protocol_conditions.experiment);
-        if ramdomize_conditions
+        if randomize_conditions
             rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
         end
 
@@ -69,16 +67,14 @@ function run_imaging_panels_protocol(protocol_folder)
             current_condition = rep_conditions_left(1);
             
             % Start with interspersal period
-            num_periods = ceil(protocol_conditions.interspersal.Duration/timer_fcn_period);
-            set(timer_hand,'TasksToExecute',num_periods);
             send_panels_command(protocol_conditions.interspersal);
-            Panel_com('start'); % This order matters! Flies don't like being put on stimulus hold
-            start(timer_hand);
+            S_DO.outputSingleScan(1);            
+            Panel_com('start');
             disp('Interpsersed Condition'); 
             Panel_com('stop');
 
             % Display the experimental stimulus
-            fprintf('Condition %d / %d; rep %d / %d\n',conds_completed+1,total_conds,numel(rep_conditions_left)+1-numel(protocol_conditions.experiment),numel(protocol_conditions.experiment));
+            fprintf('Condition %d / %d; rep %d / %d\n',numel(protocol_conditions.experiment)-numel(rep_conditions_left)+1,numel(protocol_conditions.experiment),repetition,num_repetitions);
             send_panels_command(protocol_conditions.experiment(current_condition));
  
             % Send the trigger to start acquisition before starting the stimulus (the 'stimulus' duration should be longer than the acquisition period)
@@ -87,8 +83,10 @@ function run_imaging_panels_protocol(protocol_folder)
 
             % Pause for the correct amount of time
             cond_tic = tic;
-            while toc(cond_tic) < protocol_conditions.experiment(current_condition);
+            elapsed = toc(cond_tic);
+            while elapsed < protocol_conditions.experiment(current_condition).Duration;
                 pause(.001);
+                elapsed = toc(cond_tic);
             end
             S_DO.outputSingleScan(0);
             % Remove completed condition from the list
@@ -100,7 +98,7 @@ function run_imaging_panels_protocol(protocol_folder)
 %===End the experiment and clean up the hardware etc.,=====================
     % End with another interspersal stimulus 
     send_panels_command(protocol_conditions.interspersal);
-    panel_com('start');
+    Panel_com('start');
     pause(protocol_conditions.interspersal.Duration);
     % Stop/Delete DAQ channels
     delete(S_DO); delete(S_AO);
