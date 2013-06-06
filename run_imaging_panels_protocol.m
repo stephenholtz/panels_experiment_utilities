@@ -24,7 +24,7 @@ function run_imaging_panels_protocol(protocol_folder)
     handle_result(result,message);
     experiment_metadata.protocol_conditions = protocol_conditions;
     % make a folder for the experiment + experiment_metadata + data.daq...
-    experiment_metadata.orig_exp_loc = fullfile(storage_directory,experiment_metadata.Protocol,[experiment_metadata.Line '_' experiment_metadata.Effector],experiment_metadata.DateTime);
+    experiment_metadata.orig_exp_loc = fullfile(storage_directory,experiment_metadata.Protocol,[experiment_metadata.Line '_' experiment_metadata.Indicator],experiment_metadata.DateTime);
     mkdir(experiment_metadata.orig_exp_loc);
     % save the metadata now, in case the experiment crashes...
     [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
@@ -68,9 +68,9 @@ function run_imaging_panels_protocol(protocol_folder)
             
             % Start with interspersal period
             send_panels_command(protocol_conditions.interspersal);
-            S_DO.outputSingleScan(1);            
             Panel_com('start');
-            disp('Interpsersed Condition'); 
+            fprintf('Interpsersed Condition: %d\n',protocol_conditions.interspersal.Duration); 
+            pause(protocol_conditions.interspersal.Duration);
             Panel_com('stop');
 
             % Display the experimental stimulus
