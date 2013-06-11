@@ -32,10 +32,14 @@ function run_imaging_panels_protocol(protocol_folder)
     % Create DAQ Channels
     daqreset;
     % Add analogoutput for the water bath control signal
-    S_AO=daq.createSession('ni');
-    S_AO.addAnalogOutputChannel('Dev1',0,'Voltage');
-    S_AO.outputSingleScan(2.0);
-    % Add digital out for triggering prairie view
+    S_AO_0=daq.createSession('ni');
+    S_AO_0.addAnalogOutputChannel('Dev1',0,'Voltage');
+    S_AO_0.outputSingleScan(2.0);
+    % Add analogoutput for parsing out stimuli from the experiment 
+    S_AO_1=daq.createSession('ni');
+    S_AO_1.addAnalogOutputChannel('Dev1',1,'Voltage');
+    S_AO_1.outputSingleScan(0);
+     % Add digital out for triggering prairie view
     S_DO=daq.createSession('ni');
     S_DO.addDigitalChannel('Dev1','port0/line0','OutputOnly');
     S_DO.outputSingleScan(0);
@@ -49,7 +53,7 @@ function run_imaging_panels_protocol(protocol_folder)
     pause(3); % Setting the configuration takes a few seconds.
     send_panels_command(protocol_conditions.initial_alignment);
     Panel_com('start')
-    fprintf('Initial Alignment. Press any key to start experiment.\n')
+    fprintf('Initial Alignment. Press any key to start experiment (send acquisition trigger).\n')
     pause()
     Panel_com('stop')
 
@@ -58,8 +62,15 @@ function run_imaging_panels_protocol(protocol_folder)
     % Create a variable to count the missed conditions for an alert email.
     time_taken_hand = tic;
     % Loop through the conditions, randomizing and repeating when/if necessary
-    for repetition = 1:num_repetitions
+    % Send the trigger to start acquisition before starting the stimulus
+    % (the total 'stimulus' duration should be shorter than the acquisition period 
+    % as set in PView, i.e. set the T-series to acquire some arbitrarily large
+    % number of frames for a much shorter time (and remind by email to stop) )
+    S_DO.outputSingleScan(1);
+    % Let the initial reaction to the laser turning on go away
+    pause(20); 
 
+    for repetition = 1:num_repetitions
         rep_conditions_left = 1:numel(protocol_conditions.experiment);
         if randomize_conditions
             rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
@@ -68,20 +79,21 @@ function run_imaging_panels_protocol(protocol_folder)
 
         while ~isempty(rep_conditions_left)
             current_condition = rep_conditions_left(1);
-            
             % Start with interspersal period
             send_panels_command(protocol_conditions.interspersal);
+            % The pre-stimulus has a voltage of 2
+            S_AO_1.outputSingleScan(2);
             Panel_com('start');
             fprintf('Interpsersed Condition: %d\n',protocol_conditions.interspersal.Duration); 
             pause(protocol_conditions.interspersal.Duration);
             Panel_com('stop');
-
+            % A small gap where the output goes to zero
+            S_AO_1.outputSingleScan(0); pause(.01);
             % Display the experimental stimulus
             fprintf('Condition %d / %d; rep %d / %d\n',numel(protocol_conditions.experiment)-numel(rep_conditions_left)+1,numel(protocol_conditions.experiment),repetition,num_repetitions);
             send_panels_command(protocol_conditions.experiment(current_condition));
- 
-            % Send the trigger to start acquisition before starting the stimulus (the 'stimulus' duration should be longer than the acquisition period)
-            S_DO.outputSingleScan(1);
+            % The actual stimulus has a voltage of 4
+            S_AO_1.outputSingleScan(4);
             Panel_com('start');
 
             % Pause for the correct amount of time
@@ -91,12 +103,14 @@ function run_imaging_panels_protocol(protocol_folder)
                 pause(.001);
                 elapsed = toc(cond_tic);
             end
-            S_DO.outputSingleScan(0);
             % Remove completed condition from the list
             rep_conditions_left = rep_conditions_left(2:end);
             Panel_com('stop');
-        end
+            % A small gap where the output goes to zero
+            S_AO_1.outputSingleScan(0); pause(.01);
+         end
     end
+    S_DO.outputSingleScan(0);
 
 %===End the experiment and clean up the hardware etc.,=====================
     % End with another interspersal stimulus 
@@ -105,7 +119,7 @@ function run_imaging_panels_protocol(protocol_folder)
     pause(protocol_conditions.interspersal.Duration);
     Panel_com('stop');
     % Stop/Delete DAQ channels
-    delete(S_DO); delete(S_AO);
+    delete(S_DO); delete(S_AO_0); delete(S_AO_1);
     % update the experiment_metadata file as the experiment finishes
     experiment_metadata.time_taken = toc(time_taken_hand);
     [result,message] = save_experiment_metadata_file(experiment_metadata.orig_exp_loc,experiment_metadata);
