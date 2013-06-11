@@ -9,7 +9,7 @@ function run_imaging_panels_protocol(protocol_folder)
 
 %===Set values for the current experiment here=============================
     % Number of repetitions
-    num_repetitions = 4;
+    num_repetitions = 2;
     % Randomize conditions
     randomize_conditions = 1;
     % Storage location
@@ -34,7 +34,7 @@ function run_imaging_panels_protocol(protocol_folder)
     % Add analogoutput for the water bath control signal
     S_AO=daq.createSession('ni');
     S_AO.addAnalogOutputChannel('Dev1',0,'Voltage');
-    S_AO.outputSingleScan([2.0]);
+    S_AO.outputSingleScan(2.0);
     % Add digital out for triggering prairie view
     S_DO=daq.createSession('ni');
     S_DO.addDigitalChannel('Dev1','port0/line0','OutputOnly');
@@ -53,6 +53,8 @@ function run_imaging_panels_protocol(protocol_folder)
     pause()
     Panel_com('stop')
 
+    % Store the order of the conditions in the metadata
+    experiment_metadata.ordered_conditions = [];
     % Create a variable to count the missed conditions for an alert email.
     time_taken_hand = tic;
     % Loop through the conditions, randomizing and repeating when/if necessary
@@ -62,6 +64,7 @@ function run_imaging_panels_protocol(protocol_folder)
         if randomize_conditions
             rep_conditions_left = rep_conditions_left(randperm(numel(rep_conditions_left)));
         end
+        experiment_metadata.ordered_conditions = [experiment_metadata.ordered_conditions rep_conditions_left]; %#ok<*AGROW>
 
         while ~isempty(rep_conditions_left)
             current_condition = rep_conditions_left(1);
@@ -100,6 +103,7 @@ function run_imaging_panels_protocol(protocol_folder)
     send_panels_command(protocol_conditions.interspersal);
     Panel_com('start');
     pause(protocol_conditions.interspersal.Duration);
+    Panel_com('stop');
     % Stop/Delete DAQ channels
     delete(S_DO); delete(S_AO);
     % update the experiment_metadata file as the experiment finishes
