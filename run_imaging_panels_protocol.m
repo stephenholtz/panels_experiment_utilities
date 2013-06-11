@@ -4,12 +4,12 @@ function run_imaging_panels_protocol(protocol_folder)
 % conditions for record keeping, and a folder that has a copy of what is on
 % the SD card in the controller.
 %
-% This is slightly different than the tethered flight function, it has a 
-% bit more signal sending / waiting 
+% This is slightly different than the tethered flight function in that it
+% is much simpler.
 
 %===Set values for the current experiment here=============================
     % Number of repetitions
-    num_repetitions = 2;
+    num_repetitions = 14;
     % Randomize conditions
     randomize_conditions = 1;
     % Storage location
@@ -79,22 +79,13 @@ function run_imaging_panels_protocol(protocol_folder)
 
         while ~isempty(rep_conditions_left)
             current_condition = rep_conditions_left(1);
-            % Start with interspersal period
-            send_panels_command(protocol_conditions.interspersal);
-            % The pre-stimulus has a voltage of 2
-            S_AO_1.outputSingleScan(2);
-            Panel_com('start');
-            fprintf('Interpsersed Condition: %d\n',protocol_conditions.interspersal.Duration); 
-            pause(protocol_conditions.interspersal.Duration);
-            Panel_com('stop');
-            % A small gap where the output goes to zero
-            S_AO_1.outputSingleScan(0); pause(.01);
+
             % Display the experimental stimulus
-            fprintf('Condition %d / %d; rep %d / %d\n',numel(protocol_conditions.experiment)-numel(rep_conditions_left)+1,numel(protocol_conditions.experiment),repetition,num_repetitions);
-            send_panels_command(protocol_conditions.experiment(current_condition));
             % The actual stimulus has a voltage of 4
             S_AO_1.outputSingleScan(4);
+            send_panels_command(protocol_conditions.experiment(current_condition));
             Panel_com('start');
+            fprintf('Condition %d / %d; rep %d / %d\n',numel(protocol_conditions.experiment)-numel(rep_conditions_left)+1,numel(protocol_conditions.experiment),repetition,num_repetitions);
 
             % Pause for the correct amount of time
             cond_tic = tic;
@@ -114,8 +105,8 @@ function run_imaging_panels_protocol(protocol_folder)
 
 %===End the experiment and clean up the hardware etc.,=====================
     % End with another interspersal stimulus 
-    send_panels_command(protocol_conditions.interspersal);
-    Panel_com('start');
+    send_panels_command(protocol_conditions.initial_alignment);
+    Panel_com('start'); pause(.01);
     pause(protocol_conditions.interspersal.Duration);
     Panel_com('stop');
     % Stop/Delete DAQ channels
