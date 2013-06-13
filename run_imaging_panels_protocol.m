@@ -9,12 +9,27 @@ function run_imaging_panels_protocol(protocol_folder)
 
 %===Set values for the current experiment here=============================
     % Number of repetitions
-    num_repetitions = 14;
+    num_repetitions = 10;
     % Randomize conditions
     randomize_conditions = 1;
     % Storage location
     storage_directory = 'C:\imaging_tmpfs'; 
-
+    
+    % Inside Triggersync:
+    %    "Acqusition Setup"
+    %      Number of Cycles 1
+    %       Cycle Period (ms) 3600001
+    %       Acquisition Time (ms) 3600000
+    %       Acquisition Rate 1000
+    %       Maximum Acquisition Time Waiting *ms) 10000000
+    %       Output Rate 10
+    %       Shutter / Acquisition Delay 0
+    %       Open shutter Time 0
+    %   "Stimulus Control"
+    %       DAC Out Select DAC 0 OUT 
+    %       Output Signal ON
+    %       Protocol G.F.C
+    
 %===Do some checks, and hardware initialization============================
     % check the protocol for all the required parts...
     [result,message,protocol_conditions] = check_panels_protocol(protocol_folder);
@@ -68,6 +83,7 @@ function run_imaging_panels_protocol(protocol_folder)
     % number of frames for a much shorter time (and remind by email to stop) )
     S_DO.outputSingleScan(1);
     % Let the initial reaction to the laser turning on go away
+    disp('')
     pause(20); 
 
     for repetition = 1:num_repetitions
@@ -81,8 +97,8 @@ function run_imaging_panels_protocol(protocol_folder)
             current_condition = rep_conditions_left(1);
 
             % Display the experimental stimulus
-            % The actual stimulus has a voltage of 4
-            S_AO_1.outputSingleScan(4);
+            % during the stimulus AO1 has a voltage of 5 (redundancy with panel controller)
+            S_AO_1.outputSingleScan(5);
             send_panels_command(protocol_conditions.experiment(current_condition));
             Panel_com('start');
             fprintf('Condition %d / %d; rep %d / %d\n',numel(protocol_conditions.experiment)-numel(rep_conditions_left)+1,numel(protocol_conditions.experiment),repetition,num_repetitions);
