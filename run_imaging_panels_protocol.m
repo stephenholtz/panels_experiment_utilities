@@ -5,7 +5,8 @@ function run_imaging_panels_protocol(protocol_folder)
 % the SD card in the controller.
 %
 % This is slightly different than the tethered flight function in that it
-% is much simpler.
+% is much simpler. This does NOT use the panels_experiment_instance.m 
+% file for setting up anything, just the code partition below this intro.
 
 %===Set values for the current experiment here=============================
     % Number of repetitions

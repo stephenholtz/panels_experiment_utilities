@@ -3,6 +3,20 @@ function run_panels_protocol(protocol_folder)
 % conditions for the controller, a metadata file that has the experimental
 % conditions for record keeping, and a folder that has a copy of what is on
 % the SD card in the controller.
+% 
+% To use this, the panels_experiment_instance file should agree with the 
+% experiment. i.e. you can set it to check for flight, do a certain # of
+% repetitions, change the save directory etc.,
+%
+% The metadata file in each protocol_folder is also used for some of the 
+% fields below.
+%
+% uses a matlab timer and a variable trial_info (instance of TrialInfo.m)
+% to keep track of the fly's status (i.e. flying or not). 
+% The timer (timer_hand below) is what determines the length of each 
+% experiment, and its functions are in the /panels_experiment_utilities
+% folder.
+%
 
 %===Do some checks, and hardware initialization============================
     
